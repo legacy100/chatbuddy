@@ -2,8 +2,66 @@
 
 {% block content %}
 
-<h1>Room dot room</h1>
+<style>
+    .room-container{
+        display: grid;
+        grid-template-columns: 3fr 1fr;
+    }
+</style>
 
-<h3>{{ room.name }}</h3>
+<!-- <h1>Chat Room</h1> -->
+<div class="room-container">
+    <div>
+        <h2>{{ room.name }}</h2>
+        <small>{{room.description}}</small>
+
+        <div class="comment-wrapper">
+        <h3>Conversation</h3>
+        <hr>
+
+        {% for message in chat_messages %}
+            
+        <div>
+            
+<!-- timesince attribute is used to get the exact time a chat/message was posted -->
+            <small>@{{message.user}} {{message.created |timesince}} ago</small>
+            <p>{{message.body}}</p>
+            
+            {% if request.user == message.user %}
+            <small><a href="{% url 'delete-message' message.id %}">Delete</a></small>
+            <small><a href="{% url 'edit-message' message.id %}">Edit</a></small>
+            {% endif %}
+            <hr>
+        </div>
+
+    {% endfor %}
+        </div>
+
+    {% if request.user.is_authenticated %}
+        <div class="comment-form">
+            <form action="" method="post">
+            {% csrf_token %}
+            <input type="text" name="body" placeholder="write your message here..." />
+            </form>
+        </div>
+
+    {% endif %}
+    </div>
+
+    <div>
+        <h3>Participants</h3>
+        <hr>
+        {% for user in participants %}
+
+            <div>
+                <p>@{{user.username}}</p>
+            </div>
+
+        {% endfor %}
+    </div>
+    
+
+</div>
+
 
 {% endblock content %}
