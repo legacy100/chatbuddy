@@ -9,6 +9,7 @@ class RoomForm(ModelForm):
 
 # the '__all__' attribute will create a form according to the attributes of the Room model
         fields = '__all__'
+        exclude = ['host', 'participants']
 
 class MessageForm(ModelForm):
         class Meta:

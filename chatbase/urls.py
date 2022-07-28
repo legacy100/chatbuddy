@@ -9,6 +9,7 @@ urlpatterns = [
     path('', views.home, name='home'),
 # pass in a dynamic url routing with the <str:pk>
     path('room/<str:pk>/', views.room, name='room'),
+    path('profile/<str:pk>/', views.userProfile, name='user-profile'),
 
     path('chat-room/', views.createRoom, name='chat-room'),
     path('update-room/<str:pk>/', views.updateRoom, name='update-room'),

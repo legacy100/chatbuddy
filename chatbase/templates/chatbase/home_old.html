@@ -1,0 +1,29 @@
+{% extends "main.html" %}
+
+{% block content %}
+<!-- <h1>Home dot Html</h1> -->
+<style>
+    .home-container{
+        display:grid;
+        grid-template-columns: 1fr 3fr 1fr;
+    }
+</style>
+
+<div class="home-container">
+    <div>
+        {% include 'chatbase/topic_component.html' %}
+    </div>
+    
+    <div>
+        <h5>{{room_count}} rooms available for you</h5>
+        <a href="{% url 'chat-room' %}">Create room</a>
+        <hr>
+        {% include 'chatbase/feed_component.html' %}
+    </div>
+
+    <div>
+      {% include 'chatbase/activity_component.html' %}
+    </div>
+    
+</div>
+{% endblock content %}

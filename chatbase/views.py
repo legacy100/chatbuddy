@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 # The Q import is used to output the filtered results to the console
 from django.db.models import Q
-# import user is used to retrieve the user from the database
+# import User is used to retrieve the user from the database
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
@@ -94,11 +94,14 @@ def home(request):
     topics = Topic.objects.all()
 # rooms.count is to get the number of rooms filtered from the searche engine
     room_count = rooms.count()
-# .order_by is to get the order of the message comments and limit the output to 5
-    room_messages = Message.objects.all().order_by('-created')[:4]
+    
+# .order_by is to get the order of the message comments and limit the output to 5.
+# the Q(room__topic__name__icontains=q) will filter the recent activities and display only the activities from a particular topic.
+    room_messages = Message.objects.filter(Q(room__topic__name__icontains=q)).order_by('-created')[:5]
     
     content = {'rooms': rooms, 'topics': topics, 'room_count':room_count, 'room_messages': room_messages}
     return render(request, 'chatbase/home.html', content)
+
 
 # refer/call the dynamic url from the url file by using the pk
 def room(request, pk):
@@ -122,6 +125,14 @@ def room(request, pk):
     return render(request, 'chatbase/room.html', content)
 
 
+def userProfile(request, pk):
+    user = User.objects.get(id=pk)
+    rooms = user.room_set.all()
+    room_messages = user.message_set.all()
+    topics = Topic.objects.all()
+    content = {'user': user, 'rooms': rooms, 'room_messages': room_messages, 'topics': topics}
+    return render(request, 'chatbase/profile.html', content)
+
 # if user is authenticated then he can create a room else restrict and redirect to login page
 @login_required(login_url='login')
 def createRoom(request):
@@ -130,7 +141,10 @@ def createRoom(request):
         # print(request.POST) for debugging reference
         form = RoomForm(request.POST)
         if form.is_valid():
-            form.save()
+            room = form.save(commit=False)
+# this method will only allow one to create a room if they are users
+            room.host = request.user
+            room.save()
             return redirect('home')
 
     content = {'form': form}
