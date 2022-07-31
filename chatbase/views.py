@@ -1,4 +1,5 @@
 from email import message
+from pydoc_data.topics import topics
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 # the message import is used to output error messages and warning messages 
@@ -12,7 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from .models import Room, Topic, Message
-from .forms import RoomForm, MessageForm
+from .forms import RoomForm, MessageForm, UserForm
 
 # Create your views here.
 # rooms = [
@@ -97,7 +98,7 @@ def home(request):
     
 # .order_by is to get the order of the message comments and limit the output to 5.
 # the Q(room__topic__name__icontains=q) will filter the recent activities and display only the activities from a particular topic.
-    room_messages = Message.objects.filter(Q(room__topic__name__icontains=q)).order_by('-created')[:5]
+    room_messages = Message.objects.filter(Q(room__topic__name__icontains=q)).order_by('-created')[:3]
     
     content = {'rooms': rooms, 'topics': topics, 'room_count':room_count, 'room_messages': room_messages}
     return render(request, 'chatbase/home.html', content)
@@ -137,17 +138,22 @@ def userProfile(request, pk):
 @login_required(login_url='login')
 def createRoom(request):
     form = RoomForm()
+    topics = Topic.objects.all()
     if request.method == 'POST':
-        # print(request.POST) for debugging reference
-        form = RoomForm(request.POST)
-        if form.is_valid():
-            room = form.save(commit=False)
-# this method will only allow one to create a room if they are users
-            room.host = request.user
-            room.save()
-            return redirect('home')
+        topic_name = request.POST.get('topic')
+# the get_or_create method will return an already existing object or create a new object if it doesn't exist
+        topic, created = Topic.objects.get_or_create(name=topic_name)
 
-    content = {'form': form}
+        Room.objects.create(
+            host=request.user,
+            topic=topic,
+            name=request.POST.get('name'),
+            description=request.POST.get('description'),
+        )
+        
+        return redirect('home')
+
+    content = {'form': form, 'topics': topics}
     return render(request, 'chatbase/chat_form.html', content)
 
 
@@ -155,6 +161,7 @@ def createRoom(request):
 @login_required(login_url='login')
 def updateRoom(request, pk):
     room = Room.objects.get(id=pk)
+    topics = Topic.objects.all()
 # the 'instance' key will bring the data when the edit button is clicked 
     form = RoomForm(instance=room)
 
@@ -162,12 +169,16 @@ def updateRoom(request, pk):
         return HttpResponse('You do not have permission to edit this room, make sure you are the host')
 
     if request.method == 'POST':
-        form = RoomForm(request.POST, instance=room)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
+        topic_name = request.POST.get('topic')
+# the get_or_create method will return an already existing object or create a new object if it doesn't exist
+        topic, created = Topic.objects.get_or_create(name=topic_name)
+        room.name = request.POST.get('name')
+        room.topic = topic
+        room.description = request.POST.get('description')
+        room.save()
+        return redirect('home')
 
-    content = {'form':form}
+    content = {'form':form, 'topics': topics, 'room':room}
     return render(request, 'chatbase/chat_form.html', content)
 
 
@@ -214,4 +225,17 @@ def deleteMessage(request, pk):
         return redirect('home')
     return render(request, 'chatbase/delete.html', {'obj':message})
 
+# this function is to update user profile
+@login_required(login_url='login')
+def updateUser(request):
+    user = request.user
+    form = UserForm(instance=user)
+
+    if request.method == 'POST':
+        form = UserForm(request.POST, instance=user)
+        form.save()
+        return redirect('user-profile', pk=user.id)
+
+    content={'form': form}
+    return render(request, 'chatbase/update-user.html', content)
 
