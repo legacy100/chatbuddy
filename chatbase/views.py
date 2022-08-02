@@ -9,10 +9,10 @@ from django.contrib.auth.decorators import login_required
 # The Q import is used to output the filtered results to the console
 from django.db.models import Q
 # import User is used to retrieve the user from the database
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
-from .models import Room, Topic, Message
+from .models import Room, Topic, Message, User
 from .forms import RoomForm, MessageForm, UserForm
 
 # Create your views here.
@@ -92,7 +92,7 @@ def home(request):
         Q(description__icontains=q)
         )
     
-    topics = Topic.objects.all()
+    topics = Topic.objects.all()[0:5]
 # rooms.count is to get the number of rooms filtered from the searche engine
     room_count = rooms.count()
     
@@ -239,3 +239,13 @@ def updateUser(request):
     content={'form': form}
     return render(request, 'chatbase/update-user.html', content)
 
+
+def topicsPage(request):
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
+    topics = Topic.objects.filter(name__icontains=q)
+    return render(request, 'chatbase/topics.html', {'topics': topics})
+
+
+def activityPage(request):
+    room_messages = Message.objects.all()
+    return render(request, 'chatbase/activity.html', {'room_messages': room_messages})
