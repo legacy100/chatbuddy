@@ -1,0 +1,74 @@
+{% extends "main.html" %}
+
+{% block content %}
+{% load static %}
+<style>
+    .room-container{
+        display: grid;
+        grid-template-columns: 3fr 1fr;
+    }
+</style>
+
+<!-- <h1>Chat Room</h1> -->
+<div class="room-container">
+    <div>
+        <h2>{{ room.name }}</h2>
+        <small>{{room.description}}</small>
+
+        <div class="comment-wrapper">
+        <h3>Conversation</h3>
+        <hr>
+
+        {% for message in chat_messages %}
+            
+        <div>
+            
+<!-- timesince attribute is used to get the exact time a chat/message was posted -->
+            <small>@{{message.user}} {{message.created |timesince}} ago</small>
+            <p>{{message.body}}</p>
+            
+            {% if request.user == message.user %}
+            <small><a href="{% url 'delete-message' message.id %}">Delete</a></small>
+            <small><a href="{% url 'edit-message' message.id %}">Edit</a></small>
+            {% endif %}
+            <hr>
+        </div>
+
+    {% endfor %}
+        </div>
+
+    {% if request.user.is_authenticated %}
+        <div class="comment-form">
+            <form action="" method="post">
+            {% csrf_token %}
+            <input type="text" name="body" placeholder="write your message here..." />
+            </form>
+        </div>
+
+    {% endif %}
+    </div>
+
+    <div class="participants">
+        <h3 class="participants_to">Participants <span>({{participants.count}} Joined)</span></h3>
+        <div class="participants_list scroll">
+        <hr>
+        {% for user in participants %}
+            <a href="{% url'user-profile' user.id %}" class="participant">
+                <div class="avatar avatar--medium">
+                    <img src="{% static 'images/" alt="">
+                </div>
+                <p>
+                    {{user.username}}
+                    <span>@{{user.username}}</span>
+                </p>
+            </a>
+
+        {% endfor %}
+        </div>
+    </div>
+    
+
+</div>
+
+
+{% endblock content %}
